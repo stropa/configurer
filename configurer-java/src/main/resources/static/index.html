@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>INSPINIA | Tabs </title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!--<script src="js/jquery-3.1.1.min.js"></script>-->
+<script src="js/jquery-3.2.1.js"></script>
+<script src="js/jsviews.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.js"></script>
+<script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
+<script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+
+
+<script src="js/inspinia.js"></script>
+<script src="js/plugins/pace/pace.min.js"></script>
+
+<script src="js/axios.js"></script>
+<script src="js/underscore.js"></script>
+<script src="js/jsonform.js"></script>
+<script src="js/jsonform_deps/jsv.js"></script>
+<script src="js/jsonform_deps/bootstrap-dropdown.js"></script>
+<script src="js/jsonform_deps/bootstrap-wysihtml5.js"></script>
+<script src="js/jsonform_deps/jquery-ui.js"></script>
+<script src="js/jsonform_deps/jquery.transloadit2.js"></script>
+<script src="js/jsonform_deps/jquery.ui.core.js"></script>
+<script src="js/jsonform_deps/jquery.ui.mouse.js"></script>
+<script src="js/jsonform_deps/jquery.ui.sortable.js"></script>
+<script src="js/jsonform_deps/jquery.ui.widget.js"></script>
+
+
+<div id="wrapper">
+
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu">
+                <li class="nav-header">
+                    <div class="logo-element">
+                        IN+
+                    </div>
+                </li>
+                <li>
+                    <a href="index.html"><i class="fa fa-edit"></i> <span
+                            class="nav-label">Services Configuration</span></a>
+                    <a href="settings.html"><i class="fa fa-cog"></i> <span class="nav-label">Settings</span></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="page-wrapper" class="gray-bg">
+        <div class="wrapper wrapper-content animated fadeIn">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="tabs-container">
+                        <ul id="tablist" class="nav nav-tabs" role="tablist">
+                            <script id="tabHeadingTmpl" type="text/x-jsrender">
+                                <li><a class="nav-link active" data-toggle="tab" href="#{{:index}}"> {{:shortname}} </a></li>
+
+                            </script>
+                            <!--<li><a class="nav-link" data-toggle="tab" href="#tab-2">This is second tab</a></li>-->
+                        </ul>
+                        <div class="tab-content">
+                            <script id="tabContents" type="text/x-jsrender">
+                                <div role="tabpanel" id="{{:index}}" class="tab-pane active"> <!-- active -->
+                                    <div class="panel-body">
+                                        <form action="#" id="form-{{:index}}"></form>
+                                        <!-- method="POST" action="/configurer/submit?id={{:index}}" -->
+                                    </div>
+                                </div>
+
+                            </script>
+                        </div>
+                    </div>
+                    <div id="res"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    var schemas = [];
+
+    function loadConfigSchemas() {
+        axios.get('http://localhost:9004/configurer/list/schemas').then(resp => {
+            schemas = resp.data.map(el => JSON.parse(el));
+            console.log(schemas);
+            var j = 0;
+            schemas.forEach(e => {
+                e.shortname = e.id.substring(e.id.lastIndexOf(':') + 1);
+                var re = /:/gi;
+                e.id = e.id.replace('urn:', '').replace(re, '/');
+                e.id = "http://jsonschema.com/" + e.id;
+                e.index = j;
+                j += 1;
+            });
+
+            var tabHeaderTmpl = $.templates("#tabHeadingTmpl");
+            r = tabHeaderTmpl.render(schemas);
+            $("#tablist").html(r);
+
+            var tabContentsTmpl = $.templates("#tabContents");
+            tc = tabContentsTmpl.render(schemas);
+            $(".tab-content").html(tc);
+
+            schemas.forEach((el, j) => {
+                $('#form-' + j).jsonForm({
+                    schema: el,
+                    /*form: [
+                        "*",
+                        {
+                            "type": "submit",
+                            "title": "Submit"
+                        }
+                    ],*/
+                    onSubmitValid: function (values) {
+                        // "values" follows the schema, yeepee!
+                        console.log("onSubmitValid" + values);
+                    },
+                    onSubmit: function (errors, values) {
+                        if (errors) {
+                            $('#res').html('<p>Error</p>');
+                        }
+                        else {
+                            axios.post('http://localhost:9004/configurer/submit?id=' + j, values);
+                        }
+                    }
+                })
+            });
+        });
+        loadConfigValues();
+    }
+
+    var data = [];
+
+    function loadConfigValues() {
+        axios.get('http://localhost:9004/configurer/list/configs').then(resp => {
+            data = resp.data.map(el => JSON.parse(el));
+            console.log(data);
+            var j = 0;
+            data.forEach(e => {
+                e.index = j;
+                e.shortname = schemas[e.index].shortname;
+                //e.shortname = e.id.substring(e.id.lastIndexOf(':') + 1);
+                let form = $('#form-' + e.index);
+                for (field in e) {
+                    form.find("[name='" + field + "']").val(e[field])
+                }
+                j += 1;
+            });
+        })
+    }
+
+    loadConfigSchemas();
+
+</script>
+
+
+</body>
+
+</html>

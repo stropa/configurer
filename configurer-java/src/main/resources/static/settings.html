@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurer Settings</title>
+    <link rel="stylesheet" style="text/css" href="css/bootstrap.css" />
+</head>
+
+
+<body>
+
+<script src="js/axios.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/underscore.js"></script>
+<script src="js/jsonform.js"></script>
+<script src="js/jsonform_deps/jsv.js"></script>
+<script src="js/jsonform_deps/bootstrap-dropdown.js"></script>
+<script src="js/jsonform_deps/bootstrap-wysihtml5.js"></script>
+<script src="js/jsonform_deps/jquery-ui.js"></script>
+<script src="js/jsonform_deps/jquery.transloadit2.js"></script>
+<script src="js/jsonform_deps/jquery.ui.core.js"></script>
+<script src="js/jsonform_deps/jquery.ui.mouse.js"></script>
+<script src="js/jsonform_deps/jquery.ui.sortable.js"></script>
+<script src="js/jsonform_deps/jquery.ui.widget.js"></script>
+
+
+<form></form>
+
+
+<script type="text/javascript">
+
+    data = [];
+
+    function loadOwnSettings() {
+
+        axios.get('/configurer/settings').then(resp => {
+            //console.log(resp.data);
+            data = resp.data;
+            console.log(data);
+            $('form').jsonForm({
+                schema: data
+            })
+
+        });
+    }
+
+    loadOwnSettings();
+
+</script>
+
+</body>
+</html>
