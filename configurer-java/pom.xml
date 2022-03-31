@@ -24,7 +24,7 @@
     </build>
 
     <properties>
-        <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
+        <spring.boot.version>2.5.12</spring.boot.version>
         <jackson.version>2.9.9</jackson.version>
     </properties>
 
